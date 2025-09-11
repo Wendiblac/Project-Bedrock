@@ -24,11 +24,13 @@ variable "orders_db_password" {
   description = "Password for Orders PostgreSQL DB (set via GitHub Actions secret TF_VAR_orders_db_password)"
   type        = string
   sensitive   = true
+
   validation {
-    condition     = length(var.orders_db_password) > 0
-    error_message = "orders_db_password cannot be empty!"
+    condition     = length(var.orders_db_password) >= 8 && length(var.orders_db_password) <= 41
+    error_message = "orders_db_password must be 8-41 characters."
   }
 }
+
 
 variable "catalog_db_username" {
   description = "Username for Catalog MySQL DB"
