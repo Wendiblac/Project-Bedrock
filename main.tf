@@ -15,6 +15,11 @@ module "eks" {
   private_subnets = module.vpc.private_subnets
 }
 
+module "db_subnets" {
+  source             = "./modules/db"
+  private_subnet_ids = module.vpc.private_subnets
+}
+
 ###########################
 # Security Group for DBs
 ###########################
