@@ -43,11 +43,11 @@ resource "aws_db_subnet_group" "private_subnets" {
 ###########################
 
 resource "aws_db_instance" "orders_postgres" {
-  allocated_storage      = 20
+  identifier             = "orders-postgres-db"
   engine                 = "postgres"
   engine_version         = "15.3"
   instance_class         = "db.t3.micro"
-  name                   = "orders"
+  allocated_storage      = 20
   username               = var.orders_db_username
   password               = var.orders_db_password
   publicly_accessible    = false
@@ -57,11 +57,11 @@ resource "aws_db_instance" "orders_postgres" {
 }
 
 resource "aws_db_instance" "catalog_mysql" {
-  allocated_storage      = 20
+  identifier             = "catalog-mysql-db"
   engine                 = "mysql"
   engine_version         = "8.0"
   instance_class         = "db.t3.micro"
-  name                   = "catalog"
+  allocated_storage      = 20
   username               = var.catalog_db_username
   password               = var.catalog_db_password
   publicly_accessible    = false
