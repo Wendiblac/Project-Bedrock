@@ -1,0 +1,4 @@
+plan.tfplan
+.terraform/
+*.tfplan
+*.exe
