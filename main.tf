@@ -20,6 +20,14 @@ module "db_subnets" {
   private_subnet_ids = module.vpc.private_subnets
 }
 
+output "private_subnets" {
+  value = module.vpc.private_subnets
+}
+
+output "public_subnets" {
+  value = module.vpc.public_subnets
+}
+
 ###########################
 # Security Group for DBs
 ###########################
