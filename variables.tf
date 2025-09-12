@@ -53,3 +53,14 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
+variable "private_subnets" {
+  description = "Optional list of private subnet IDs (unused at root, passed via modules)"
+  type        = list(string)
+  default     = []
+}
+
+variable "public_subnets" {
+  description = "Optional list of public subnet IDs (unused at root, passed via modules)"
+  type        = list(string)
+  default     = []
+}
