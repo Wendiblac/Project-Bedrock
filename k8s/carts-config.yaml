@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: carts-dynamodb-config
+  namespace: retail
+data:
+  CARTS_TABLE: carts-table
+  AWS_REGION: eu-west-1

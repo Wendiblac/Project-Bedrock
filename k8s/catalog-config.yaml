@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: catalog-db-secret
+  namespace: retail
+type: Opaque
+stringData:
+  MYSQL_USER: catalog_admin
+  MYSQL_PASSWORD: ${CATALOG_DB_PASSWORD}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog-db-config
+  namespace: retail
+data:
+  MYSQL_HOST: project-bedrock-catalog-db.cnk602mc6myt.eu-west-1.rds.amazonaws.com
+  MYSQL_PORT: "3306"
+  MYSQL_DATABASE: catalogdb
