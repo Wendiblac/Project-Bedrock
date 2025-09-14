@@ -55,7 +55,9 @@ jobs:
 
       - name: Terraform Apply (Base Infra)
         if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve -lock-timeout=10m -target=module.vpc -target=module.eks
+        env:
+          TF_VAR_private_subnet_ids: ' [ "subnet-0bd38c23eea40ff9c", "subnet-04746109f33098115"]' # temp fix
+        run: terraform apply -auto-approve -input=false -lock-timeout=10m -target=module.vpc -target=module.eks
 
   infra-db-subnets:
     runs-on: ubuntu-latest
