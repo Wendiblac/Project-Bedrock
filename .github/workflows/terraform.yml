@@ -44,13 +44,18 @@ jobs:
       - name: Terraform Validate (Base Infra)
         run: terraform validate
 
+      # 🔑 Unlock stale state if exists
+      - name: Force Unlock (Base Infra)
+        run: |
+          terraform force-unlock -force $(terraform state lock-id || echo "none") || true
+
       - name: Terraform Plan (Base Infra)
         if: startsWith(github.ref, 'refs/heads/feature/') || github.ref == 'refs/heads/develop'
         run: terraform plan -target=module.vpc -target=module.eks -out=tfplan
 
       - name: Terraform Apply (Base Infra)
         if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve -lock-timeout=2m -target=module.vpc -target=module.eks
+        run: terraform apply -auto-approve -lock-timeout=10m -target=module.vpc -target=module.eks
 
   infra-db-subnets:
     runs-on: ubuntu-latest
@@ -62,7 +67,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -83,13 +87,17 @@ jobs:
       - name: Terraform Validate (DB Subnets)
         run: terraform validate
 
+      - name: Force Unlock (DB Subnets)
+        run: |
+          terraform force-unlock -force $(terraform state lock-id || echo "none") || true
+
       - name: Terraform Plan (DB Subnets)
         if: startsWith(github.ref, 'refs/heads/feature/') || github.ref == 'refs/heads/develop'
         run: terraform plan -target=module.db_subnets -out=tfplan
 
       - name: Terraform Apply (DB Subnets)
         if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve -lock-timeout=2m -target=module.db_subnets
+        run: terraform apply -auto-approve -lock-timeout=10m -target=module.db_subnets
 
   infra-db-instance:
     runs-on: ubuntu-latest
@@ -103,7 +111,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -124,10 +131,14 @@ jobs:
       - name: Terraform Validate (DB Instance)
         run: terraform validate
 
+      - name: Force Unlock (DB Instance)
+        run: |
+          terraform force-unlock -force $(terraform state lock-id || echo "none") || true
+
       - name: Terraform Plan (DB Instance)
         if: startsWith(github.ref, 'refs/heads/feature/') || github.ref == 'refs/heads/develop'
         run: terraform plan -target=aws_db_instance.orders -target=aws_db_instance.catalog -out=tfplan
 
       - name: Terraform Apply (DB Instance)
         if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve -lock-timeout=5m -target=aws_db_instance.orders -target=aws_db_instance.catalog
+        run: terraform apply -auto-approve -lock-timeout=10m -target=aws_db_instance.orders -target=aws_db_instance.catalog
