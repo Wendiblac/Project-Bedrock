@@ -11,6 +11,11 @@ on:
       - main
       - develop
 
+# 🚦 Prevent multiple runs from colliding on state
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   infra-base:
     runs-on: ubuntu-latest
@@ -29,25 +34,25 @@ jobs:
         with:
           terraform_version: 1.7.0
 
-      - name: Cache Terraform Providers
-        uses: actions/cache@v3
-        with:
-          path: |
-            .terraform/providers
-            .terraform/modules
-          key: terraform-${{ hashFiles('**/*.tf') }}
-          restore-keys: terraform-
-
       - name: Terraform Init (Base Infra)
         run: terraform init
 
       - name: Terraform Validate (Base Infra)
         run: terraform validate
 
-      # 🔑 Unlock stale state if exists
-      - name: Force Unlock (Base Infra)
+      - name: Force unlock if stale lock exists
         run: |
-          terraform force-unlock -force $(terraform state lock-id || echo "none") || true
+          LOCK_ID=$(aws dynamodb scan \
+            --table-name innovatemart-tfstate \
+            --region $AWS_DEFAULT_REGION \
+            --query "Items[0].LockID.S" \
+            --output text || echo "")
+          if [ "$LOCK_ID" != "" ] && [ "$LOCK_ID" != "None" ]; then
+            echo "⚠️ Found stale lock $LOCK_ID, unlocking..."
+            terraform force-unlock -force $LOCK_ID || true
+          else
+            echo "✅ No stale lock found."
+          fi
 
       - name: Terraform Plan (Base Infra)
         if: startsWith(github.ref, 'refs/heads/feature/') || github.ref == 'refs/heads/develop'
@@ -55,8 +60,6 @@ jobs:
 
       - name: Terraform Apply (Base Infra)
         if: github.ref == 'refs/heads/main'
-        env:
-          TF_VAR_private_subnet_ids: ' [ "subnet-0bd38c23eea40ff9c", "subnet-04746109f33098115"]' # temp fix
         run: terraform apply -auto-approve -input=false -lock-timeout=10m -target=module.vpc -target=module.eks
 
   infra-db-subnets:
@@ -69,19 +72,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.7.0
-
-      - name: Cache Terraform Providers
-        uses: actions/cache@v3
-        with:
-          path: |
-            .terraform/providers
-            .terraform/modules
-          key: terraform-${{ hashFiles('**/*.tf') }}
-          restore-keys: terraform-
 
       - name: Terraform Init (DB Subnets)
         run: terraform init
@@ -89,9 +84,19 @@ jobs:
       - name: Terraform Validate (DB Subnets)
         run: terraform validate
 
-      - name: Force Unlock (DB Subnets)
+      - name: Force unlock if stale lock exists
         run: |
-          terraform force-unlock -force $(terraform state lock-id || echo "none") || true
+          LOCK_ID=$(aws dynamodb scan \
+            --table-name innovatemart-tfstate \
+            --region $AWS_DEFAULT_REGION \
+            --query "Items[0].LockID.S" \
+            --output text || echo "")
+          if [ "$LOCK_ID" != "" ] && [ "$LOCK_ID" != "None" ]; then
+            echo "⚠️ Found stale lock $LOCK_ID, unlocking..."
+            terraform force-unlock -force $LOCK_ID || true
+          else
+            echo "✅ No stale lock found."
+          fi
 
       - name: Terraform Plan (DB Subnets)
         if: startsWith(github.ref, 'refs/heads/feature/') || github.ref == 'refs/heads/develop'
@@ -99,7 +104,7 @@ jobs:
 
       - name: Terraform Apply (DB Subnets)
         if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve -lock-timeout=10m -target=module.db_subnets
+        run: terraform apply -auto-approve -input=false -lock-timeout=10m -target=module.db_subnets
 
   infra-db-instance:
     runs-on: ubuntu-latest
@@ -113,19 +118,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.7.0
-
-      - name: Cache Terraform Providers
-        uses: actions/cache@v3
-        with:
-          path: |
-            .terraform/providers
-            .terraform/modules
-          key: terraform-${{ hashFiles('**/*.tf') }}
-          restore-keys: terraform-
 
       - name: Terraform Init (DB Instance)
         run: terraform init
@@ -133,9 +130,19 @@ jobs:
       - name: Terraform Validate (DB Instance)
         run: terraform validate
 
-      - name: Force Unlock (DB Instance)
+      - name: Force unlock if stale lock exists
         run: |
-          terraform force-unlock -force $(terraform state lock-id || echo "none") || true
+          LOCK_ID=$(aws dynamodb scan \
+            --table-name innovatemart-tfstate \
+            --region $AWS_DEFAULT_REGION \
+            --query "Items[0].LockID.S" \
+            --output text || echo "")
+          if [ "$LOCK_ID" != "" ] && [ "$LOCK_ID" != "None" ]; then
+            echo "⚠️ Found stale lock $LOCK_ID, unlocking..."
+            terraform force-unlock -force $LOCK_ID || true
+          else
+            echo "✅ No stale lock found."
+          fi
 
       - name: Terraform Plan (DB Instance)
         if: startsWith(github.ref, 'refs/heads/feature/') || github.ref == 'refs/heads/develop'
@@ -143,4 +150,4 @@ jobs:
 
       - name: Terraform Apply (DB Instance)
         if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve -lock-timeout=10m -target=aws_db_instance.orders -target=aws_db_instance.catalog
+        run: terraform apply -auto-approve -input=false -lock-timeout=10m -target=aws_db_instance.orders -target=aws_db_instance.catalog
