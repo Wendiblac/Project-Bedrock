@@ -55,7 +55,7 @@ resource "aws_iam_role_policy_attachment" "eks_node_AmazonEKS_CNI_Policy" {
 resource "aws_eks_cluster" "this" {
   name     = "${var.project}-eks-cluster"
   role_arn = aws_iam_role.eks_cluster_role.arn
-  version  = "1.29"
+  version  = "1.30"
 
   vpc_config {
     subnet_ids              = concat(var.public_subnets, var.private_subnets)
@@ -82,7 +82,7 @@ resource "aws_eks_node_group" "this" {
   scaling_config {
     desired_size = 1
     min_size     = 1
-    max_size     = 1
+    max_size     = 3
   }
 
   depends_on = [
