@@ -10,10 +10,20 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS":443}]'
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:585008052023:certificate/57b119f5-b421-475c-abf1-4cdf5b61cf5a
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-2016-08
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/actions.ssl-redirect: >
+      {"Type":"redirect","RedirectConfig":{"Protocol":"HTTPS","Port":"443","StatusCode":"HTTP_301"}}
 spec:
   ingressClassName: alb
   rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ssl-redirect
+            port:
+              name: use-annotation
   - host: innovatemart.wendiblac.com
     http:
       paths:
@@ -24,7 +34,4 @@ spec:
             name: ui-service
             port:
               number: 80
-  tls:
-  - hosts:
-    - innovatemart.wendiblac.com
-    secretName: dummy-tls-secret
+

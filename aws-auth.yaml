@@ -10,9 +10,18 @@ data:
       groups:
         - system:bootstrappers
         - system:nodes
-  mapUsers: |
-    - userarn: arn:aws:iam::585008052023:user/BedrockDeveloper-user
-      username: BedrockDeveloper 
+    - rolearn: arn:aws:iam::585008052023:role/K8sAccessRole
+      username: BedrockDeveloper
       groups:
-        - view
+        - bedrock-view-group
 
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"mapRoles":"- rolearn: arn:aws:iam::585008052023:role/project-bedrock-eks-node-role\n  username: system:node:{{EC2PrivateDNSName}}\n  groups:\n    - system:bootstrappers\n    - system:nodes\n","mapUsers":"- userarn: arn:aws:iam::585008052023:user/BedrockDeveloper-user\n  username: BedrockDeveloper\n  groups:\n    - bedrock-view-group\n    - view\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"aws-auth","namespace":"kube-system"}}
+  creationTimestamp: "2025-09-11T04:50:29Z"
+  name: aws-auth
+  namespace: kube-system
+  resourceVersion: "1584874"
+  uid: a8bb8171-ff0d-43d1-b2a9-9afb87059924
